@@ -1,4 +1,4 @@
-module main
+module vcolor
 
 import os
 import io
@@ -58,17 +58,17 @@ pub enum Attribute {
 	bg_hi_white
 }
 
-fn no_color() bool {
-	return os.getenv('NO_COLOR') != ''
-}
-
 pub fn new(attrs ...Attribute) &Color {
 	color := &Color{
 		params: attrs
-		colorable: !no_color()
+		colorable: os.getenv('NO_COLOR') == ''
 		writer: os.stdout()
 	}
 	return color
+}
+
+pub fn (mut color Color) set_writer(writer io.Writer) {
+	color.writer = writer
 }
 
 // add is used to chain SGR parameters. Use as many as parameters to combine and create custom color objects. Example: add(.fg_red, .underline).
@@ -91,12 +91,16 @@ pub fn (mut color Color) colorable() bool {
 	return color.colorable
 }
 
-pub fn (mut color Color) print(format string, a ...voidptr) {
+pub fn (mut color Color) sprint(format string, a ...voidptr) string {
 	mut params := [format]
 	for key in a {
 		params << key.str()
 	}
-	color.writer.write(color.wrap(params.join(' ')).bytes()) or {}
+	return color.wrap(params.join(' '))
+}
+
+pub fn (mut color Color) print(format string, a ...voidptr) {
+	color.writer.write(color.sprint(format, ...a).bytes()) or {}
 }
 
 pub fn (mut color Color) println(format string, a ...voidptr) {
@@ -115,11 +119,11 @@ fn (mut color Color) wrap(s string) string {
 }
 
 fn (mut color Color) format() string {
-	return '${escape}[${color.sequence()}m'
+	return '${vcolor.escape}[${color.sequence()}m'
 }
 
 fn (mut color Color) unformat() string {
-	return '${escape}[${int(Attribute.reset).str()}m'
+	return '${vcolor.escape}[${int(Attribute.reset).str()}m'
 }
 
 // sequence
@@ -132,7 +136,8 @@ fn (mut color Color) sequence() string {
 }
 
 pub fn color_string(format string, attr Attribute, a ...voidptr) string {
-	return ''
+	mut c := new(attr)
+	return c.sprint(format)
 }
 
 fn color_print(format string, attr Attribute, a ...voidptr) {
@@ -204,23 +209,66 @@ pub fn hi_white(format string) {
 	color_print(format, Attribute.fg_hi_white)
 }
 
-fn main() {
-	mut color := new(Attribute.bg_blue, Attribute.bold, Attribute.underline)
-	color.print('hello world')
-	white('white string')
-	magenta('magenta string')
-	cyan('cyan string')
-	red('red string')
-	yellow('yellow string')
-	green('green string')
-	black('black string')
-	blue('blue string')
-	hi_white('white string')
-	hi_magenta('magenta string')
-	hi_cyan('cyan string')
-	hi_red('red string')
-	hi_yellow('yellow string')
-	hi_green('green string')
-	hi_black('black string')
-	hi_blue('blue string')
+pub fn red_string(format string) string {
+	return color_string(format, Attribute.fg_red)
+}
+
+pub fn green_string(format string) string {
+	return color_string(format, Attribute.fg_green)
+}
+
+pub fn cyan_string(format string) string {
+	return color_string(format, Attribute.fg_cyan)
+}
+
+pub fn black_string(format string) string {
+	return color_string(format, Attribute.fg_black)
+}
+
+pub fn yellow_string(format string) string {
+	return color_string(format, Attribute.fg_yellow)
+}
+
+pub fn blue_string(format string) string {
+	return color_string(format, Attribute.fg_blue)
+}
+
+pub fn magenta_string(format string) string {
+	return color_string(format, Attribute.fg_magenta)
+}
+
+pub fn white_string(format string) string {
+	return color_string(format, Attribute.fg_white)
+}
+
+pub fn hi_red_string(format string) string {
+	return color_string(format, Attribute.fg_hi_red)
+}
+
+pub fn hi_green_string(format string) string {
+	return color_string(format, Attribute.fg_hi_green)
+}
+
+pub fn hi_cyan_string(format string) string {
+	return color_string(format, Attribute.fg_hi_cyan)
+}
+
+pub fn hi_black_string(format string) string {
+	return color_string(format, Attribute.fg_hi_black)
+}
+
+pub fn hi_yellow_string(format string) string {
+	return color_string(format, Attribute.fg_hi_yellow)
+}
+
+pub fn hi_blue_string(format string) string {
+	return color_string(format, Attribute.fg_hi_blue)
+}
+
+pub fn hi_magenta_string(format string) string {
+	return color_string(format, Attribute.fg_hi_magenta)
+}
+
+pub fn hi_white_string(format string) string {
+	return color_string(format, Attribute.fg_hi_white)
 }
